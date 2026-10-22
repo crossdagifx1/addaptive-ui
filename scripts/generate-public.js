@@ -10,49 +10,72 @@ const docsDir = path.join(publicDir, 'docs');
 
 fs.mkdirSync(docsDir, { recursive: true });
 
-// ── 1. Installer Scripts ─────────────────────────────────────────────────────
+// ── 1. Installer Scripts (Standalone Instant 163KB Binary) ───────────────────
+
+// Ensure standalone CLI bundle is copied to public/aui.mjs
+const standaloneCli = path.join(rootDir, 'packages', 'cli', 'dist-standalone', 'cli.js');
+if (fs.existsSync(standaloneCli)) {
+  fs.copyFileSync(standaloneCli, path.join(publicDir, 'aui.mjs'));
+}
 
 const installPs1 = `# AUI Engine CLI Windows PowerShell Installer
 $ErrorActionPreference = 'Stop'
 
-Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║               AUI Engine CLI v1.0.0                  ║" -ForegroundColor Cyan
-Write-Host "║      The safe adaptive UI layer for any website      ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════╝" -ForegroundColor Cyan
-Write-Host ""
+Write-Host ''
+Write-Host '========================================================' -ForegroundColor Cyan
+Write-Host '               AUI Engine CLI v1.0.0                    ' -ForegroundColor Cyan
+Write-Host '      The safe adaptive UI layer for any website        ' -ForegroundColor Cyan
+Write-Host '========================================================' -ForegroundColor Cyan
+Write-Host ''
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-    Write-Host "[-] Node.js is required but was not found on your PATH." -ForegroundColor Yellow
-    Write-Host "[*] Attempting to install Node.js via winget..." -ForegroundColor Cyan
+    Write-Host '[-] Node.js is required but was not found on your PATH.' -ForegroundColor Yellow
+    Write-Host '[*] Attempting to install Node.js via winget...' -ForegroundColor Cyan
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
     } else {
-        Write-Host "[!] Please install Node.js (v18+) from https://nodejs.org and re-run." -ForegroundColor Red
+        Write-Host '[!] Please install Node.js (v18+) from https://nodejs.org and re-run.' -ForegroundColor Red
         exit 1
     }
 }
 
-$InstallDir = Join-Path $HOME ".aui"
-if (Test-Path $InstallDir) {
-    Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue
+$AuiHome = Join-Path $HOME '.aui'
+$BinDir = Join-Path $AuiHome 'bin'
+if (-not (Test-Path $BinDir)) {
+    New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
 }
 
-Write-Host "[*] Downloading AUI Engine CLI from GitHub..." -ForegroundColor Cyan
-git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git $InstallDir
+Write-Host '[*] Downloading AUI Engine CLI standalone bundle...' -ForegroundColor Cyan
+$AuiMjs = Join-Path $AuiHome 'aui.mjs'
+Invoke-WebRequest -Uri 'https://addaptive-ui.vercel.app/aui.mjs' -OutFile $AuiMjs -UseBasicParsing
 
-Set-Location $InstallDir
-Write-Host "[*] Building dependencies..." -ForegroundColor Cyan
-npm install --silent 2>$null
-npm run build --silent 2>$null
+# Create aui.cmd wrapper
+$CmdContent = '@echo off' + [System.Environment]::NewLine + 'node "%~dp0\\..\\aui.mjs" %*'
+Set-Content -Path (Join-Path $BinDir 'aui.cmd') -Value $CmdContent -Encoding ASCII
 
-Set-Location (Join-Path $InstallDir "packages\\cli")
-npm link --silent 2>$null
+# Create aui.ps1 wrapper
+$Ps1Content = 'node "' + $AuiMjs + '" $args'
+Set-Content -Path (Join-Path $BinDir 'aui.ps1') -Value $Ps1Content -Encoding ASCII
 
-Write-Host ""
-Write-Host "✔ AUI CLI successfully installed!" -ForegroundColor Green
-Write-Host "  Run 'aui --help' or 'aui init' to start creating safe adaptive UI." -ForegroundColor White
-Write-Host ""
+# Update User PATH permanently
+$UserPath = [System.Environment]::GetEnvironmentVariable('Path', 'User')
+if ($UserPath) {
+    if ($UserPath -notlike ('*' + $BinDir + '*')) {
+        [System.Environment]::SetEnvironmentVariable('Path', ($BinDir + ';' + $UserPath), 'User')
+    }
+} else {
+    [System.Environment]::SetEnvironmentVariable('Path', $BinDir, 'User')
+}
+
+# Update session PATH immediately
+if ($env:Path -notlike ('*' + $BinDir + '*')) {
+    $env:Path = $BinDir + ';' + $env:Path
+}
+
+Write-Host ''
+Write-Host '[OK] AUI CLI v1.0.0 successfully installed!' -ForegroundColor Green
+Write-Host '  Run "aui --help" or "aui init" to start creating safe adaptive UI.' -ForegroundColor White
+Write-Host ''
 `;
 
 const installCmd = `@echo off
@@ -70,22 +93,23 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-set "INSTALL_DIR=%USERPROFILE%\\.aui"
-if exist "%INSTALL_DIR%" rmdir /s /q "%INSTALL_DIR%"
+set "AUI_DIR=%USERPROFILE%\\.aui"
+set "BIN_DIR=%AUI_DIR%\\bin"
 
-echo [*] Downloading AUI CLI from GitHub...
-git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git "%INSTALL_DIR%"
-cd /d "%INSTALL_DIR%"
+if not exist "%BIN_DIR%" mkdir "%BIN_DIR%"
 
-echo [*] Installing and building...
-call npm install --silent
-call npm run build --silent
+echo [*] Downloading AUI CLI binary (163 KB)...
+curl -fsSL https://addaptive-ui.vercel.app/aui.mjs -o "%AUI_DIR%\\aui.mjs"
 
-cd /d "%INSTALL_DIR%\\packages\\cli"
-call npm link --silent
+echo @echo off > "%BIN_DIR%\\aui.cmd"
+echo node "%%~dp0\\..\\aui.mjs" %%* >> "%BIN_DIR%\\aui.cmd"
+
+echo [*] Adding to PATH...
+setx PATH "%BIN_DIR%;%PATH%" >nul 2>nul
+set "PATH=%BIN_DIR%;%PATH%"
 
 echo.
-echo [OK] AUI CLI successfully installed!
+echo [OK] AUI CLI successfully installed to %BIN_DIR%!
 echo Run "aui --help" to get started.
 echo.
 endlocal
@@ -103,26 +127,36 @@ echo ""
 
 if ! command -v node >/dev/null 2>&1; then
     echo -e "\\033[31m[-] Node.js is required but was not found.\\033[0m"
-    echo "Please install Node.js (v18+) from https://nodejs.org or via your package manager."
+    echo "Please install Node.js (v18+) from https://nodejs.org or via brew/apt."
     exit 1
 fi
 
-INSTALL_DIR="$HOME/.aui"
-rm -rf "$INSTALL_DIR"
+AUI_DIR="$HOME/.aui"
+BIN_DIR="$AUI_DIR/bin"
+mkdir -p "$BIN_DIR"
 
-echo -e "\\033[34m[*] Downloading AUI Engine CLI...\\033[0m"
-git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git "$INSTALL_DIR"
+echo -e "\\033[34m[*] Downloading AUI CLI binary (163 KB)...\\033[0m"
+curl -fsSL https://addaptive-ui.vercel.app/aui.mjs -o "$AUI_DIR/aui.mjs"
 
-cd "$INSTALL_DIR"
-echo -e "\\033[34m[*] Installing dependencies...\\033[0m"
-npm install --silent
-npm run build --silent
+cat << 'EOF' > "$BIN_DIR/aui"
+#!/usr/bin/env sh
+exec node "$HOME/.aui/aui.mjs" "$@"
+EOF
+chmod +x "$BIN_DIR/aui"
 
-cd "$INSTALL_DIR/packages/cli"
-sudo npm link --silent || npm link --silent
+SHELL_PROFILE="$HOME/.bashrc"
+if [ -f "$HOME/.zshrc" ]; then
+    SHELL_PROFILE="$HOME/.zshrc"
+fi
+
+if ! grep -q "$BIN_DIR" "$SHELL_PROFILE" 2>/dev/null; then
+    echo "export PATH=\\"$BIN_DIR:\\$PATH\\"" >> "$SHELL_PROFILE"
+fi
+
+export PATH="$BIN_DIR:$PATH"
 
 echo ""
-echo -e "\\033[32m✔ AUI CLI successfully installed!\\033[0m"
+echo -e "\\033[32m✔ AUI CLI successfully installed to $BIN_DIR!\\033[0m"
 echo "  Run 'aui --help' or 'aui init' to start creating safe adaptive UI."
 echo ""
 `;
@@ -130,6 +164,7 @@ echo ""
 fs.writeFileSync(path.join(publicDir, 'install.ps1'), installPs1);
 fs.writeFileSync(path.join(publicDir, 'install.cmd'), installCmd);
 fs.writeFileSync(path.join(publicDir, 'install.sh'), installSh);
+
 
 // ── 2. Static Playground HTML ────────────────────────────────────────────────
 const playgroundHtml = `<!DOCTYPE html>

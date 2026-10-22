@@ -13,22 +13,23 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-set "INSTALL_DIR=%USERPROFILE%\.aui"
-if exist "%INSTALL_DIR%" rmdir /s /q "%INSTALL_DIR%"
+set "AUI_DIR=%USERPROFILE%\.aui"
+set "BIN_DIR=%AUI_DIR%\bin"
 
-echo [*] Downloading AUI CLI from GitHub...
-git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git "%INSTALL_DIR%"
-cd /d "%INSTALL_DIR%"
+if not exist "%BIN_DIR%" mkdir "%BIN_DIR%"
 
-echo [*] Installing and building...
-call npm install --silent
-call npm run build --silent
+echo [*] Downloading AUI CLI binary (163 KB)...
+curl -fsSL https://addaptive-ui.vercel.app/aui.mjs -o "%AUI_DIR%\aui.mjs"
 
-cd /d "%INSTALL_DIR%\packages\cli"
-call npm link --silent
+echo @echo off > "%BIN_DIR%\aui.cmd"
+echo node "%%~dp0\..\aui.mjs" %%* >> "%BIN_DIR%\aui.cmd"
+
+echo [*] Adding to PATH...
+setx PATH "%BIN_DIR%;%PATH%" >nul 2>nul
+set "PATH=%BIN_DIR%;%PATH%"
 
 echo.
-echo [OK] AUI CLI successfully installed!
+echo [OK] AUI CLI successfully installed to %BIN_DIR%!
 echo Run "aui --help" to get started.
 echo.
 endlocal

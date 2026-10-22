@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "blueprintId": "bp_fixture_default",
+  "pageId": "home",
+  "segment": "default",
+  "tokens": {
+    "color.primary": "#00e5ff",
+    "color.surface": "#111118",
+    "color.text": "#f5f5f5",
+    "density": "comfortable"
+  },
+  "layout": {
+    "type": "stack",
+    "sections": ["hero", "features", "pricing", "footer"]
+  },
+  "components": {
+    "hero": {
+      "type": "Hero",
+      "props": {
+        "headline": "Modern Adaptive UI Engine",
+        "subheadline": "The safe adaptive UI layer for any website.",
+        "primaryCta": { "label": "Start Free", "action": "navigate:/signup" }
+      }
+    },
+    "features": {
+      "type": "FeatureGrid",
+      "props": {
+        "items": [
+          { "title": "Zero Latency", "text": "Cached at the edge." },
+          { "title": "Locked Zones", "text": "Guaranteed protection for pricing." }
+        ]
+      }
+    },
+    "pricing": {
+      "type": "PricingTable",
+      "locked": true,
+      "props": {
+        "plans": [
+          { "name": "Starter", "price": "$0", "features": ["1 Site", "10k Visitors"] },
+          { "name": "Pro", "price": "$149", "features": ["Unlimited Sites", "100k Visitors"] }
+        ]
+      }
+    },
+    "footer": {
+      "type": "LegalFooter",
+      "locked": true,
+      "props": {
+        "text": "© 2026 AUI Engine Inc."
+      }
+    }
+  },
+  "flow": {
+    "onPrimaryCta": "navigate:/signup"
+  },
+  "meta": {
+    "generatedBy": "fixture:default",
+    "createdAt": "2026-10-22T08:00:00.000Z"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@aui/playground",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Live demo and sandbox for AUI Engine",
+  "type": "module",
+  "scripts": {
+    "dev": "tsup src/server.ts --format esm && node dist/server.js",
+    "build": "tsup src/server.ts --format esm --clean",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aui/schema": "workspace:*",
+    "@aui/core": "workspace:*",
+    "@aui/validator": "workspace:*",
+    "@aui/policy": "workspace:*",
+    "@aui/components-landing": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "rimraf": "^6.0.0"
+  }
+}

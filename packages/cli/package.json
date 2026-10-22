@@ -1,0 +1,33 @@
+{
+  "name": "@aui/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CLI for AUI Engine — init, validate, preview, register components",
+  "type": "module",
+  "bin": {
+    "aui": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/cli.ts --format esm --clean",
+    "dev": "tsup src/cli.ts --format esm --watch",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist coverage"
+  },
+  "dependencies": {
+    "@aui/schema": "workspace:*",
+    "@aui/validator": "workspace:*",
+    "@aui/core": "workspace:*",
+    "@aui/components-landing": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "rimraf": "^6.0.0"
+  }
+}

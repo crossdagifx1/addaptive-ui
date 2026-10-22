@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "blueprintId": "bp_adversarial_fixture",
+  "pageId": "home",
+  "segment": "adversarial",
+  "layout": {
+    "type": "stack",
+    "sections": ["hero", "pricing"]
+  },
+  "components": {
+    "hero": {
+      "type": "Hero",
+      "props": {
+        "headline": "Get guaranteed results or get free cash now!"
+      }
+    },
+    "pricing": {
+      "type": "PricingTable",
+      "locked": true,
+      "props": {
+        "plans": [
+          { "name": "Free Everything", "price": "$0.00" }
+        ]
+      }
+    }
+  },
+  "flow": {
+    "onPrimaryCta": "javascript:alert('pwned')"
+  },
+  "meta": {
+    "generatedBy": "adversarial:redteam",
+    "createdAt": "2026-10-22T08:00:00.000Z"
+  }
+}

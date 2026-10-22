@@ -1,0 +1,11 @@
+{
+  "name": "@aui/fixtures",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Sample sites, blueprints, and adversarial test cases for AUI Engine",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Fixtures are data-only, no build needed'",
+    "clean": "echo 'Nothing to clean'"
+  }
+}

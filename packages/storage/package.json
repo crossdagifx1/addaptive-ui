@@ -1,0 +1,26 @@
+{
+  "name": "@aui/storage",
+  "version": "0.0.1",
+  "description": "Enterprise persistence, SQLite storage, authentication, signed blueprints, variant cache, and async generation queue for AUI Engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "test": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aui/policy": "workspace:*",
+    "@aui/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "rimraf": "^6.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
+

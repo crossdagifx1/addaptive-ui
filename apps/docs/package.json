@@ -1,0 +1,25 @@
+{
+  "name": "@aui/docs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Documentation site for AUI Engine",
+  "type": "module",
+  "scripts": {
+    "dev": "tsup src/server.ts --format esm && node dist/server.js",
+    "build": "tsup src/server.ts --format esm --clean",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aui/schema": "workspace:*",
+    "@aui/core": "workspace:*",
+    "@aui/components-landing": "workspace:*"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

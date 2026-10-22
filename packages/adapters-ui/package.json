@@ -1,0 +1,66 @@
+{
+  "name": "@aui/adapters-ui",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Framework adapters — React, Vue, Svelte, and script-embed wrappers for AUI Engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.js"
+    },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "import": "./dist/svelte/index.js"
+    },
+    "./wordpress": {
+      "types": "./dist/wordpress/index.d.ts",
+      "import": "./dist/wordpress/index.js"
+    },
+    "./shopify": {
+      "types": "./dist/shopify/index.d.ts",
+      "import": "./dist/shopify/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/react/index.ts src/vue/index.ts src/svelte/index.ts src/wordpress/index.ts src/shopify/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/react/index.ts --format esm --dts --watch",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist coverage"
+  },
+  "dependencies": {
+    "@aui/schema": "workspace:*",
+    "@aui/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true }
+  },
+  "devDependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "rimraf": "^6.0.0"
+  }
+}

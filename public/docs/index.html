@@ -149,13 +149,6 @@
       border-radius: 4px;
       color: #00e5ff;
     }
-    .callout {
-      background: rgba(0, 229, 255, 0.06);
-      border-left: 4px solid var(--cyan);
-      padding: 16px 20px;
-      border-radius: 0 12px 12px 0;
-      margin: 20px 0;
-    }
   </style>
 </head>
 <body>
@@ -196,11 +189,16 @@
         <h1>Quickstart Guide</h1>
         <p class="lead">Integrate AUI into any web application or site in under 5 minutes with zero layout shifts and complete safety guarantees.</p>
 
-        <h2>1. Installation</h2>
-        <p>Install the AUI CLI globally or run it directly via npx:</p>
-        <pre>npm install -g @aui/cli
-# Or run with npx:
-npx aui init</pre>
+        <h2>1. Instant 1-Line Installation</h2>
+        <p>Choose your operating system and paste into your terminal:</p>
+        <pre># Windows PowerShell
+irm https://addaptive-ui.vercel.app/install.ps1 | iex
+
+# Windows CMD
+curl -fsSL https://addaptive-ui.vercel.app/install.cmd -o install.cmd && install.cmd && del install.cmd
+
+# macOS & Linux
+curl -fsSL https://addaptive-ui.vercel.app/install.sh | bash</pre>
 
         <h2>2. Initialize Your Site</h2>
         <p>Run <code>aui init</code> inside your web project root. This creates <code>aui.config.json</code> and a validated <code>blueprint.json</code> starter.</p>

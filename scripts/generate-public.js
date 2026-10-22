@@ -10,13 +10,134 @@ const docsDir = path.join(publicDir, 'docs');
 
 fs.mkdirSync(docsDir, { recursive: true });
 
-// ── 1. Static Playground HTML ────────────────────────────────────────────────
+// ── 1. Installer Scripts ─────────────────────────────────────────────────────
+
+const installPs1 = `# AUI Engine CLI Windows PowerShell Installer
+$ErrorActionPreference = 'Stop'
+
+Write-Host ""
+Write-Host "╔══════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║               AUI Engine CLI v1.0.0                  ║" -ForegroundColor Cyan
+Write-Host "║      The safe adaptive UI layer for any website      ║" -ForegroundColor Cyan
+Write-Host "╚══════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host ""
+
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "[-] Node.js is required but was not found on your PATH." -ForegroundColor Yellow
+    Write-Host "[*] Attempting to install Node.js via winget..." -ForegroundColor Cyan
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+    } else {
+        Write-Host "[!] Please install Node.js (v18+) from https://nodejs.org and re-run." -ForegroundColor Red
+        exit 1
+    }
+}
+
+$InstallDir = Join-Path $HOME ".aui"
+if (Test-Path $InstallDir) {
+    Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue
+}
+
+Write-Host "[*] Downloading AUI Engine CLI from GitHub..." -ForegroundColor Cyan
+git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git $InstallDir
+
+Set-Location $InstallDir
+Write-Host "[*] Building dependencies..." -ForegroundColor Cyan
+npm install --silent 2>$null
+npm run build --silent 2>$null
+
+Set-Location (Join-Path $InstallDir "packages\\cli")
+npm link --silent 2>$null
+
+Write-Host ""
+Write-Host "✔ AUI CLI successfully installed!" -ForegroundColor Green
+Write-Host "  Run 'aui --help' or 'aui init' to start creating safe adaptive UI." -ForegroundColor White
+Write-Host ""
+`;
+
+const installCmd = `@echo off
+setlocal
+echo.
+echo ========================================================
+echo               AUI Engine CLI v1.0.0
+echo      The safe adaptive UI layer for any website
+echo ========================================================
+echo.
+
+where node >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [-] Node.js is required. Please install Node.js from https://nodejs.org
+    exit /b 1
+)
+
+set "INSTALL_DIR=%USERPROFILE%\\.aui"
+if exist "%INSTALL_DIR%" rmdir /s /q "%INSTALL_DIR%"
+
+echo [*] Downloading AUI CLI from GitHub...
+git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git "%INSTALL_DIR%"
+cd /d "%INSTALL_DIR%"
+
+echo [*] Installing and building...
+call npm install --silent
+call npm run build --silent
+
+cd /d "%INSTALL_DIR%\\packages\\cli"
+call npm link --silent
+
+echo.
+echo [OK] AUI CLI successfully installed!
+echo Run "aui --help" to get started.
+echo.
+endlocal
+`;
+
+const installSh = `#!/usr/bin/env bash
+set -e
+
+echo ""
+echo -e "\\033[36m╔══════════════════════════════════════════════════════╗\\033[0m"
+echo -e "\\033[36m║               AUI Engine CLI v1.0.0                  ║\\033[0m"
+echo -e "\\033[36m║      The safe adaptive UI layer for any website      ║\\033[0m"
+echo -e "\\033[36m╚══════════════════════════════════════════════════════╝\\033[0m"
+echo ""
+
+if ! command -v node >/dev/null 2>&1; then
+    echo -e "\\033[31m[-] Node.js is required but was not found.\\033[0m"
+    echo "Please install Node.js (v18+) from https://nodejs.org or via your package manager."
+    exit 1
+fi
+
+INSTALL_DIR="$HOME/.aui"
+rm -rf "$INSTALL_DIR"
+
+echo -e "\\033[34m[*] Downloading AUI Engine CLI...\\033[0m"
+git clone --depth 1 https://github.com/crossdagifx1/addaptive-ui.git "$INSTALL_DIR"
+
+cd "$INSTALL_DIR"
+echo -e "\\033[34m[*] Installing dependencies...\\033[0m"
+npm install --silent
+npm run build --silent
+
+cd "$INSTALL_DIR/packages/cli"
+sudo npm link --silent || npm link --silent
+
+echo ""
+echo -e "\\033[32m✔ AUI CLI successfully installed!\\033[0m"
+echo "  Run 'aui --help' or 'aui init' to start creating safe adaptive UI."
+echo ""
+`;
+
+fs.writeFileSync(path.join(publicDir, 'install.ps1'), installPs1);
+fs.writeFileSync(path.join(publicDir, 'install.cmd'), installCmd);
+fs.writeFileSync(path.join(publicDir, 'install.sh'), installSh);
+
+// ── 2. Static Playground HTML ────────────────────────────────────────────────
 const playgroundHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AUI Engine — Live Interactive Playground & Threat Sandbox</title>
+  <title>AUI Engine — Live Interactive Playground & CLI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -161,6 +282,81 @@ const playgroundHtml = `<!DOCTYPE html>
       justify-content: space-between;
     }
 
+    /* CLI Installation Section */
+    .cli-install-section {
+      max-width: 960px;
+      margin: 40px auto 20px auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+    .cli-header {
+      margin-bottom: 24px;
+    }
+    .cli-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cli-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+    .cli-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    .install-box {
+      margin-bottom: 20px;
+    }
+    .install-label {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: rgba(245,245,245,0.9);
+    }
+    .code-box {
+      background: #111118;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: #00e5ff;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .copy-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover {
+      background: var(--cyan);
+      color: #0a0a0f;
+    }
+
     #aui-root {
       min-height: calc(100vh - 120px);
     }
@@ -212,9 +408,61 @@ const playgroundHtml = `<!DOCTYPE html>
     The AI attempted to modify the locked <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">PricingTable</code> and inject banned marketing phrases. The 9-stage policy engine rejected the variant and immediately degraded gracefully to the default blueprint!
   </div>
 
+  <!-- CLI Installation Box -->
+  <div class="cli-install-section">
+    <div class="cli-header">
+      <div class="cli-title">
+        <span>AUI Engine CLI</span>
+        <span class="cli-tag">v1.0.0</span>
+      </div>
+      <p class="cli-desc">Work with AUI directly in your codebase. Build, validate, and preview adaptive UI from your terminal with 1-line installation.</p>
+    </div>
+
+    <div class="install-box">
+      <div class="install-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.951-1.801"/></svg>
+        <span>Windows PowerShell</span>
+      </div>
+      <div class="code-box">
+        <span id="cmd-ps">irm https://addaptive-ui.vercel.app/install.ps1 | iex</span>
+        <button class="copy-btn" onclick="copyCmd('cmd-ps', this)">Copy</button>
+      </div>
+    </div>
+
+    <div class="install-box">
+      <div class="install-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.951-1.801"/></svg>
+        <span>Windows CMD</span>
+      </div>
+      <div class="code-box">
+        <span id="cmd-cmd">curl -fsSL https://addaptive-ui.vercel.app/install.cmd -o install.cmd &amp;&amp; install.cmd &amp;&amp; del install.cmd</span>
+        <button class="copy-btn" onclick="copyCmd('cmd-cmd', this)">Copy</button>
+      </div>
+    </div>
+
+    <div class="install-box">
+      <div class="install-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 7.17c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.98.6-2.61 1.34-.56.64-1.04 1.71-.91 2.74 1 .08 2.01-.51 2.6-1.23z"/></svg>
+        <span>macOS &amp; Linux (bash / zsh)</span>
+      </div>
+      <div class="code-box">
+        <span id="cmd-sh">curl -fsSL https://addaptive-ui.vercel.app/install.sh | bash</span>
+        <button class="copy-btn" onclick="copyCmd('cmd-sh', this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
   <div id="aui-root"></div>
 
   <script>
+    function copyCmd(id, btn) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text);
+      const prev = btn.innerText;
+      btn.innerText = 'Copied!';
+      setTimeout(() => btn.innerText = prev, 2000);
+    }
+
     const VARIANTS = {
       default: {
         reasoning: "Serving standard baseline blueprint to holdout control group.",
@@ -349,7 +597,7 @@ const playgroundHtml = `<!DOCTYPE html>
 
       // Hero
       const heroEl = document.createElement('section');
-      heroEl.innerHTML = \`<div style="padding: 80px 24px; text-align: center; max-width: 900px; margin: 0 auto;">
+      heroEl.innerHTML = \`<div style="padding: 60px 24px; text-align: center; max-width: 900px; margin: 0 auto;">
         <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; margin-bottom: 24px;">
           <span>✨ Model-Agnostic Adaptive UI Layer</span>
         </div>
@@ -449,7 +697,7 @@ const playgroundHtml = `<!DOCTYPE html>
 
 fs.writeFileSync(path.join(publicDir, 'index.html'), playgroundHtml);
 
-// ── 2. Static Docs HTML ──────────────────────────────────────────────────────
+// ── 3. Static Docs HTML ──────────────────────────────────────────────────────
 const docsHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -601,13 +849,6 @@ const docsHtml = `<!DOCTYPE html>
       border-radius: 4px;
       color: #00e5ff;
     }
-    .callout {
-      background: rgba(0, 229, 255, 0.06);
-      border-left: 4px solid var(--cyan);
-      padding: 16px 20px;
-      border-radius: 0 12px 12px 0;
-      margin: 20px 0;
-    }
   </style>
 </head>
 <body>
@@ -648,11 +889,16 @@ const docsHtml = `<!DOCTYPE html>
         <h1>Quickstart Guide</h1>
         <p class="lead">Integrate AUI into any web application or site in under 5 minutes with zero layout shifts and complete safety guarantees.</p>
 
-        <h2>1. Installation</h2>
-        <p>Install the AUI CLI globally or run it directly via npx:</p>
-        <pre>npm install -g @aui/cli
-# Or run with npx:
-npx aui init</pre>
+        <h2>1. Instant 1-Line Installation</h2>
+        <p>Choose your operating system and paste into your terminal:</p>
+        <pre># Windows PowerShell
+irm https://addaptive-ui.vercel.app/install.ps1 | iex
+
+# Windows CMD
+curl -fsSL https://addaptive-ui.vercel.app/install.cmd -o install.cmd && install.cmd && del install.cmd
+
+# macOS & Linux
+curl -fsSL https://addaptive-ui.vercel.app/install.sh | bash</pre>
 
         <h2>2. Initialize Your Site</h2>
         <p>Run <code>aui init</code> inside your web project root. This creates <code>aui.config.json</code> and a validated <code>blueprint.json</code> starter.</p>
@@ -698,7 +944,7 @@ const governor = new SpendGovernor({
 
 fs.writeFileSync(path.join(docsDir, 'index.html'), docsHtml);
 
-// ── 3. Drop-in Client Embed Script (public/aui.js) ────────────────────────────
+// ── 4. Drop-in Client Embed Script (public/aui.js) ────────────────────────────
 const embedScript = `/**
  * AUI Engine Drop-In Client Embed v1.0.0
  * Zero-Flash Safe Adaptive UI Layer
@@ -714,7 +960,7 @@ const embedScript = `/**
 
 fs.writeFileSync(path.join(publicDir, 'aui.js'), embedScript);
 
-// ── 4. vercel.json ───────────────────────────────────────────────────────────
+// ── 5. vercel.json ───────────────────────────────────────────────────────────
 const vercelConfig = {
   version: 2,
   outputDirectory: 'public',
@@ -723,4 +969,4 @@ const vercelConfig = {
 
 fs.writeFileSync(path.join(rootDir, 'vercel.json'), JSON.stringify(vercelConfig, null, 2));
 
-console.log('✔ Public directory and vercel.json successfully created!');
+console.log('✔ Public directory, install scripts, and vercel.json successfully created!');

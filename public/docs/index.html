@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AUI Engine — Documentation & Architecture Specification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface1: #111118;
+      --surface2: #1a1a25;
+      --border: #2a2a40;
+      --cyan: #00e5ff;
+      --gold: #d4af37;
+      --emerald: #10b981;
+      --text: #f5f5f5;
+      --text-muted: #9090a8;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(17, 17, 24, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .brand-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--cyan);
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    aside {
+      width: 280px;
+      padding: 32px 24px;
+      border-right: 1px solid var(--border);
+      height: calc(100vh - 65px);
+      position: sticky;
+      top: 65px;
+      overflow-y: auto;
+    }
+    .nav-category {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin: 24px 0 10px 0;
+    }
+    .nav-category:first-child { margin-top: 0; }
+    .nav-item {
+      display: block;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      transition: all 0.15s;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: var(--text);
+      background: var(--surface2);
+    }
+    .nav-item.active {
+      color: var(--cyan);
+      font-weight: 600;
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    main {
+      flex: 1;
+      padding: 40px 60px;
+      max-width: 960px;
+    }
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .lead { font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 32px; }
+    h2 { font-size: 22px; font-weight: 700; margin: 36px 0 16px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    p { margin-bottom: 16px; color: rgba(245,245,245,0.85); line-height: 1.7; }
+    ul { margin: 0 0 24px 20px; color: rgba(245,245,245,0.85); }
+    li { margin-bottom: 8px; line-height: 1.6; }
+
+    pre {
+      background: var(--surface1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 16px 0 24px 0;
+      color: #00e5ff;
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #00e5ff;
+    }
+    .callout {
+      background: rgba(0, 229, 255, 0.06);
+      border-left: 4px solid var(--cyan);
+      padding: 16px 20px;
+      border-radius: 0 12px 12px 0;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>AUI Engine</span>
+      <span class="brand-tag">Docs</span>
+    </div>
+    <div class="nav-links">
+      <a href="/">🎮 Live Playground</a>
+      <a href="https://github.com/crossdagifx1/addaptive-ui" target="_blank">💻 GitHub</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="nav-category">Getting Started</div>
+      <a href="#quickstart" class="nav-item active">Quickstart Guide</a>
+      <a href="#cli" class="nav-item">CLI Commands</a>
+
+      <div class="nav-category">Architecture</div>
+      <a href="#validation" class="nav-item">9-Stage Validation</a>
+      <a href="#locked-zones" class="nav-item">Locked Zones</a>
+      <a href="#crypto" class="nav-item">Signed HMAC Blueprints</a>
+
+      <div class="nav-category">Integrations</div>
+      <a href="#react" class="nav-item">React & Next.js</a>
+      <a href="#vue-svelte" class="nav-item">Vue & Svelte</a>
+      <a href="#wordpress" class="nav-item">Shopify & WordPress</a>
+
+      <div class="nav-category">Enterprise</div>
+      <a href="#spend-governor" class="nav-item">SpendGovernor</a>
+      <a href="#privacy" class="nav-item">GDPR Privacy Engine</a>
+    </aside>
+
+    <main>
+      <section id="quickstart">
+        <h1>Quickstart Guide</h1>
+        <p class="lead">Integrate AUI into any web application or site in under 5 minutes with zero layout shifts and complete safety guarantees.</p>
+
+        <h2>1. Installation</h2>
+        <p>Install the AUI CLI globally or run it directly via npx:</p>
+        <pre>npm install -g @aui/cli
+# Or run with npx:
+npx aui init</pre>
+
+        <h2>2. Initialize Your Site</h2>
+        <p>Run <code>aui init</code> inside your web project root. This creates <code>aui.config.json</code> and a validated <code>blueprint.json</code> starter.</p>
+
+        <h2>3. Embed Client Layer</h2>
+        <p>Add the drop-in embed script to your HTML head:</p>
+        <pre>&lt;script src="https://addaptive-ui.vercel.app/aui.js"
+        data-aui-signing-key="your_hmac_secret"
+        async&gt;&lt;/script&gt;</pre>
+      </section>
+
+      <section id="validation">
+        <h2>9-Stage Security Validation Engine</h2>
+        <p>Every generated candidate blueprint must pass through nine zero-bypass validation stages before it can ever be displayed to a visitor:</p>
+        <ul>
+          <li><strong>Stage 1 (Schema):</strong> Strict Zod & JSON-Schema syntax enforcement.</li>
+          <li><strong>Stage 2 (Component):</strong> AST verification against the registered component catalogue.</li>
+          <li><strong>Stage 3 (Permission):</strong> Section-level modification access control.</li>
+          <li><strong>Stage 4 (Locked Zone):</strong> Absolute immutability guard for pricing tables and legal terms.</li>
+          <li><strong>Stage 5 (Content Policy):</strong> Rejection of prompt injections, homoglyphs, and banned phrases.</li>
+          <li><strong>Stage 6 (Link Action):</strong> Strict domain and protocol whitelist enforcement.</li>
+          <li><strong>Stage 7 (Accessibility):</strong> WCAG contrast and ARIA attribute verification.</li>
+          <li><strong>Stage 8 (Size Budget):</strong> Payload size upper bounds (&lt; 64 KB).</li>
+          <li><strong>Stage 9 (Diff Size):</strong> Maximum permissible UI delta per session (&lt; 40%).</li>
+        </ul>
+      </section>
+
+      <section id="spend-governor">
+        <h2>SpendGovernor Cost Controls</h2>
+        <p>Protect your AI budget with automated spending caps, threshold warnings, and graceful degradation:</p>
+        <pre>import { SpendGovernor } from '@aui/storage';
+
+const governor = new SpendGovernor({
+  monthlyCapUsd: 500,
+  warningThresholdPercent: 80,
+  onAutoPause: () => console.log('Monthly cap hit! Auto-paused.')
+});</pre>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
